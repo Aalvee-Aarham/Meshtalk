@@ -241,7 +241,7 @@ Each number key has letters on it. **Tap the same key again to move to the next 
 
 - **Wait 1 second** (or press a different key) and the letter is locked in. A blinking block shows the letter you're still choosing.
 - **Hold a number key for 1 second** to type the number itself (e.g. hold `5` → `5`).
-- `*` = **delete** the last letter. **Hold** `*` to delete everything.
+- `*` or `A` = **delete** the last letter (backspace). **Hold** `A` to keep deleting letter by letter. **Hold** `*` to delete everything.
 - `#` = change mode. The current mode shows in the top-right corner:
   - `Abc`: next letter is a capital, then back to small letters (this is the mode when you start).
   - `abc`: all small letters.

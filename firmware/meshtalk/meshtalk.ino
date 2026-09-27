@@ -921,8 +921,8 @@ void editorKey(char k, int ev) {
       edPendAt = now;
     }
     edBuf[edLen] = 0;
-  } else if (k == '*') {
-    if (ev == EV_HOLD) edLen = 0;
+  } else if (k == '*' || k == 'A') {  // backspace; hold * clears all, hold A repeats (pollKeys)
+    if (ev == EV_HOLD) { if (k == '*') edLen = 0; }
     else if (edLen) edLen--;
     edBuf[edLen] = 0;
     edPendKey = 0;
