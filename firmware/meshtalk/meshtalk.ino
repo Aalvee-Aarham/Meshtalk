@@ -15,6 +15,7 @@
 #define I2C_SDA 13
 #define I2C_SCL 12  // NOTE: GPIO12 is a boot strapping pin, see README if the board won't boot.
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+#define BUZZER_PIN 15  // active buzzer, HIGH = on. GPIO15 is a strapping pin too: may chirp at boot, harmless.
 
 const byte ROWS = 4, COLS = 4;
 char keys[ROWS][COLS] = {
@@ -35,6 +36,7 @@ Keypad keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 #define BACKLIGHT_MS 60000  // backlight off after idle
 #define ADV_HOLD_MS 250     // how long each packet is advertised (~10 transmissions)
 #define SOS_HOLD_MS 600
+#define BEEP_MS 200         // buzzer length for a normal incoming message
 
 // ================= protocol (keep in sync with app) =================
 #define COMPANY_ID 0xFFFF
@@ -591,7 +593,7 @@ uint32_t lastInput;
 int popup = P_NONE;
 int popupSlot;
 uint16_t popupId;
-uint32_t popupUntil;
+uint32_t popupUntil, buzzUntil;
 char toastA[17], toastB[17];
 
 // editor
@@ -627,6 +629,7 @@ void popupMsg(int slot) {
   popup = sos ? P_SOS : P_MSG;
   popupSlot = slot;
   popupUntil = millis() + (sos ? 120000 : 15000);
+  buzzUntil = millis() + BEEP_MS;  // SOS keeps buzzing in uiService() until acknowledged
   wake();
   dirty = true;
 }
@@ -1106,6 +1109,8 @@ void uiService() {
   uint32_t now = millis();
   if (popup != P_NONE && (int32_t)(now - popupUntil) >= 0) { popup = P_NONE; dirty = true; }
   if (edPendKey && now - edPendAt >= MULTITAP_MS) edCommit();
+  bool buzz = popup == P_SOS ? (now / 400) % 2 : (int32_t)(now - buzzUntil) < 0;  // SOS: in step with the flashing
+  digitalWrite(BUZZER_PIN, buzz);
   if (popup == P_SOS) {  // flash backlight until acknowledged
     bool on = (now / 400) % 2;
     if (on != lightOn) { on ? lcd.backlight() : lcd.noBacklight(); lightOn = on; }
@@ -1125,6 +1130,8 @@ void uiService() {
 // ================= setup / loop =================
 void setup() {
   Serial.begin(115200);
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
   Wire.begin(I2C_SDA, I2C_SCL);
   lcd.init();
   lcd.backlight();

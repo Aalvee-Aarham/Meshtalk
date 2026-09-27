@@ -93,7 +93,8 @@ meshtalk/
 | ESP32 dev board | The classic "ESP32 DevKit / WROOM-32" (it has pins 32 and 33). ESP32-S3/C3 boards are **not** supported as-is. |
 | 4x4 matrix keypad | The common membrane keypad with keys 0–9, A–D, `*`, `#`. |
 | 16x2 LCD with I2C backpack | The blue/green LCD with a small PCF8574 board soldered on the back. Address `0x27` (the most common). |
-| Jumper wires | 8 for the keypad, 4 for the LCD. |
+| Active buzzer (optional) | A 3.3–5 V **active** buzzer (it beeps by itself when powered). Beeps on new messages, sounds continuously on SOS. |
+| Jumper wires | 8 for the keypad, 4 for the LCD, 2 for the buzzer. |
 | Power | USB cable, or a USB power bank to carry it around. |
 
 ### For the phone
@@ -135,6 +136,15 @@ meshtalk/
 > **If your board won't start with the LCD connected**, pick one fix:
 > 1. **Easy fix:** move the SCL wire from GPIO 12 to **GPIO 22**. Then open `meshtalk.ino`, find `#define I2C_SCL 12` near the top, change it to `#define I2C_SCL 22`, and upload again.
 > 2. **Permanent fix (advanced):** run `espefuse.py set_flash_voltage 3.3V` once. This tells the chip to ignore GPIO 12 at start-up forever. It can't be undone.
+
+**Buzzer** (optional):
+
+| Buzzer pin | ESP32 pin |
+|---|---|
+| + (long leg) | GPIO 15 (D15) |
+| − (short leg) | GND |
+
+> Use an **active** buzzer. A passive one stays silent (it needs `tone()` instead of `digitalWrite` in `uiService()`). If yours draws more than about 20 mA, drive it through an NPN transistor. GPIO 15 is also checked at power-on, so the buzzer may chirp briefly at start-up. That's harmless.
 
 **LCD shows only boxes, or nothing?** Turn the small blue screw (contrast) on the back of the LCD with a screwdriver until text appears.
 
@@ -281,9 +291,9 @@ When something arrives, it pops up over whatever you're doing:
 
 | Pop-up | Keys |
 |---|---|
-| **New message** | D = read it now, C = close (it stays in the Inbox) |
+| **New message** | Short beep. D = read it now, C = close (it stays in the Inbox) |
 | **Friend request** ("Req: Rahim") | D = accept, `*` = decline, C = later (find it in menu 6) |
-| **SOS** | The screen light **flashes** until you press any key. D = read it. |
+| **SOS** | The screen light **flashes** and the buzzer **beeps along with it** until you press any key (or 2 minutes pass). D = read it. |
 
 ### 6.6 Friends: why you need them
 
